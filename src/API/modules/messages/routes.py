@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends
 from starlette import status
-from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from src.core.security import TokenManager
-from src.core.storages import WSStorage
-from src.modules.messages.dto import CreateModel
-from src.modules.messages.service import Service
+from src.API.modules.messages.dto import CreateModel
+from src.API.modules.messages.service import Service
 
 router = APIRouter(prefix="/messages",
                    tags=["сообщения"])

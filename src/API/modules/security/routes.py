@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.modules.security.service import Service
+from src.API.modules.security.service import Service
 
 router = APIRouter(prefix="/security")
 

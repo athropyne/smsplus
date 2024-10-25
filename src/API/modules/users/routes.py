@@ -4,9 +4,8 @@ from fastapi import APIRouter, Depends
 from starlette import status
 
 from src.core import security
-from src.core.security import TokenManager
-from src.modules.users.dto import UserInfoModel, CreateModel
-from src.modules.users.service import Service
+from src.API.modules.users.dto import UserInfoModel, CreateModel
+from src.API.modules.users.service import Service
 
 router = APIRouter(prefix="/users",
                    tags=["пользователи"])

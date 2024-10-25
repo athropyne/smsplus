@@ -1,7 +1,7 @@
 from fastapi import Depends
 
-from src.modules.messages.dto import CreateModel
-from src.modules.messages.repository import Repository
+from src.API.modules.messages.dto import CreateModel
+from src.API.modules.messages.repository import Repository
 
 
 class Service:

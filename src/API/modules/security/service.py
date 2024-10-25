@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException
 from starlette import status
 
 from src.core.security import PasswordManager, TokenManager
-from src.modules.security.repository import Repository
+from src.API.modules.security.repository import Repository
 
 
 class Service:

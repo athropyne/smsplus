@@ -1,8 +1,8 @@
 from fastapi import Depends
 
 from src.core.security import PasswordManager
-from src.modules.users.dto import CreateModel
-from src.modules.users.repository import Repository
+from src.API.modules.users.dto import CreateModel
+from src.API.modules.users.repository import Repository
 
 
 class Service:

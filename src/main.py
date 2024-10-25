@@ -4,9 +4,9 @@ from fastapi import FastAPI
 
 from src.core import storages
 from src.core.schemas import metadata
-from .modules.security import security_router
-from .modules.users import users_router
-from .modules.messages import messages_router
+from src.API.modules.security import security_router
+from src.API.modules.users import users_router
+from src.API.modules.messages import messages_router
 
 
 @asynccontextmanager
