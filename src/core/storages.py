@@ -1,5 +1,6 @@
 from typing import Dict
 
+import redis.asyncio
 from redis.asyncio import Redis
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -32,13 +33,21 @@ class Database:
         await cls.engine.dispose()
 
 
-class WSStorage:
-    _online: Dict[int, WebSocket] = {}
+class RedisStorage:
 
-    @classmethod
-    def add(cls, user_id: int, socket: WebSocket):
-        cls._online[user_id] = socket
+    def __init__(self,
+                 host: str,
+                 port: int,
+                 db):
+        self.connection: Redis = redis.asyncio.Redis(host=host,
+                                                     port=port,
+                                                     db=db,
+                                                     decode_responses=True)
 
-    @classmethod
-    def delete(cls, user_id: int):
-        del cls._online[user_id]
+    async def __call__(self):
+        return self.connection
+
+
+message_transfer = RedisStorage(config.REDIS_HOST(),
+                                config.REDIS_PORT(),
+                                config.REDIS_DBNAME())
