@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy import CursorResult, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql.operators import in_op
 from starlette import status
 
 from src.core.interfaces import BaseRepository
@@ -32,3 +33,10 @@ class Repository(BaseRepository):
             )
         )
         return cursor.mappings().fetchall()
+
+    async def get_login_by_id(self, user_id: int) -> str:
+        cursor: CursorResult = await self.exec(
+            select(users.c.login)
+            .where(users.c.id == user_id)
+        )
+        return cursor.scalar()

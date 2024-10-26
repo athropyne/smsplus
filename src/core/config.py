@@ -28,29 +28,37 @@ def PG_TRANSACTIONS_AUTOCOMMIT() -> bool:
         raise exc
 
 
-# def ONLINE_USERS_REDIS_CONFIG() -> dict:
-#     return {
-#         "host": os.getenv("ONLINE_USERS_HOST", "localhost"),
-#         "port": int(os.getenv("ONLINE_USERS_PORT", 6379)),
-#         "db": os.getenv("ONLINE_USERS_DB_NAME", "online"),
-#         "password": os.getenv("ONLINE_USERS_PASSWORD", None),
-#         "decode_responses": True,
-#         # add **kwargs parameters if need
-#     }
+def MESSAGE_TRANSFER_REDIS_HOST() -> str:
+    return os.getenv("MESSAGE_TRANSFER_REDIS_HOST", "localhost")
 
 
-def REDIS_HOST()-> str:
-    return os.getenv("REDIS_HOST", "localhost")
-
-def REDIS_PORT()-> int:
+def MESSAGE_TRANSFER_REDIS_PORT() -> int:
     try:
-        return int(os.getenv("REDIS_PORT", 6379))
+        return int(os.getenv("MESSAGE_TRANSFER_REDIS_PORT", 6379))
     except TypeError:
-        raise  TypeError("parameter REDIS_PORT must by integer")
+        raise TypeError("parameter REDIS_PORT must by integer")
 
 
-def REDIS_DBNAME():
-    env = os.getenv("REDIS_DBNAME", 0)
+def MESSAGE_TRANSFER_REDIS_DBNAME():
+    env = os.getenv("MESSAGE_TRANSFER_REDIS_DBNAME", 0)
+    if not isinstance(env, int) and not isinstance(env, str):
+        raise TypeError("parameter REDIS_DBNAME must by integer or string")
+    return env
+
+
+def USERS_CACHE_REDIS_HOST() -> str:
+    return os.getenv("USERS_CACHE_REDIS_HOST", "localhost")
+
+
+def USERS_CACHE_REDIS_PORT() -> int:
+    try:
+        return int(os.getenv("USERS_CACHE_REDIS_PORT", 6379))
+    except TypeError:
+        raise TypeError("parameter REDIS_PORT must by integer")
+
+
+def USERS_CACHE_REDIS_DBNAME():
+    env = os.getenv("USERS_CACHE_REDIS_DBNAME", 1)
     if not isinstance(env, int) and not isinstance(env, str):
         raise TypeError("parameter REDIS_DBNAME must by integer or string")
     return env

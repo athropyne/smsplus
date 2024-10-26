@@ -1,15 +1,10 @@
-import asyncio
-import json
-
 from fastapi import APIRouter, Depends
-from redis.asyncio import Redis
 from starlette import status
 from starlette.websockets import WebSocket
 
-from src.core.security import TokenManager
 from src.API.modules.messages.dto import CreateModel
 from src.API.modules.messages.service import Service
-from src.core.storages import message_transfer
+from src.core.security import TokenManager
 
 router = APIRouter(prefix="/messages",
                    tags=["сообщения"])
@@ -36,16 +31,7 @@ async def get_history(
 
 
 @router.websocket("/ws")
-async def handler(websocket: WebSocket,
-                  transfer: Redis = Depends(message_transfer)):
-    await websocket.accept()
-    p = transfer.pubsub()
-    await p.subscribe("message")
-    while True:
-        msg = await p.get_message()
-        print(msg)
-        if msg is not None:
-            if msg["data"] != 1:
-                await websocket.send_text(msg["data"])
-                # print(msg["data"])
-        await asyncio.sleep(1)
+async def exchange(websocket: WebSocket,
+                   self_id: int = Depends(TokenManager.decode),
+                   service: Service = Depends(Service)):
+    await service.exchange(self_id, websocket)

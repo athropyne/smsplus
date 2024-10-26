@@ -1,9 +1,11 @@
 from typing import Dict
 
 import redis.asyncio
+from fastapi import WebSocketException
 from redis.asyncio import Redis
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import create_async_engine
+from starlette import status
 from starlette.websockets import WebSocket
 
 from src.core import config
@@ -48,6 +50,32 @@ class RedisStorage:
         return self.connection
 
 
-message_transfer = RedisStorage(config.REDIS_HOST(),
-                                config.REDIS_PORT(),
-                                config.REDIS_DBNAME())
+users_cache = RedisStorage(config.USERS_CACHE_REDIS_HOST(),
+                           config.USERS_CACHE_REDIS_PORT(),
+                           config.USERS_CACHE_REDIS_DBNAME())
+
+message_transfer = RedisStorage(config.MESSAGE_TRANSFER_REDIS_HOST(),
+                                config.MESSAGE_TRANSFER_REDIS_PORT(),
+                                config.MESSAGE_TRANSFER_REDIS_DBNAME())
+
+
+class Online:
+    _users: Dict[int, WebSocket] = {}
+
+    @classmethod
+    def add(cls, user_id: int, socket: WebSocket):
+        cls._users[user_id] = socket
+
+    @classmethod
+    def remove(cls, user_id: int):
+        if user_id in cls._users:
+            del cls._users[user_id]
+
+    @classmethod
+    def get(cls, recipient_id: int) -> WebSocket:
+        if recipient_id in cls._users:
+            return cls._users[recipient_id]
+        raise WebSocketException(
+            code=status.WS_1003_UNSUPPORTED_DATA,
+            reason="пользователь оффлайн или не существует"
+        )
