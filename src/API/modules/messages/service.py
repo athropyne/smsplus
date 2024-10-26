@@ -39,21 +39,21 @@ class Service:
         return await self.repository.get_history(self_id, interlocutor_id)
 
     async def exchange(self,
-                       user_id: int,
+                       recipient_id: int,
                        self_socket: WebSocket):
         await self_socket.accept()
-        Online.add(user_id, self_socket)
+        Online.add(recipient_id, self_socket)
         p = self.transfer.pubsub()
         await p.subscribe("message")
         while True:
             msg = await p.get_message()
-            print(msg)
             if msg is not None:
+                print(msg)
                 if msg["data"] != 1:
                     data = json.loads(msg["data"])
-                    recipient_id = data["to"]
+                    sender_id = data["from"]
                     recipient_socket = Online.get(recipient_id)
-                    sender_login = await self.helper.convert_to_login(user_id)
+                    sender_login = await self.helper.convert_to_login(sender_id)
                     output = {
                         "from": sender_login,
                         "text": data["text"]

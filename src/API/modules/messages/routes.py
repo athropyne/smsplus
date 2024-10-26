@@ -17,6 +17,8 @@ async def create(
         model: CreateModel,
         self_id: int = Depends(TokenManager.decode),
         service: Service = Depends(Service)):
+    print(recipient_id)
+    print(self_id)
     await service.create(self_id, recipient_id, model)
 
 
@@ -27,11 +29,13 @@ async def get_history(
         interlocutor_id: int = ...,
         service: Service = Depends(Service)
 ):
+    print(" from ws route " + str(self_id))
     return await service.get_history(self_id, interlocutor_id)
 
 
 @router.websocket("/ws")
 async def exchange(websocket: WebSocket,
-                   self_id: int = Depends(TokenManager.decode),
+                   recipient_id: int = Depends(TokenManager.decode),
                    service: Service = Depends(Service)):
-    await service.exchange(self_id, websocket)
+    print(str(recipient_id) + " from route")
+    await service.exchange(recipient_id, websocket)
