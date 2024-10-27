@@ -62,3 +62,12 @@ def USERS_CACHE_REDIS_DBNAME():
     if not isinstance(env, int) and not isinstance(env, str):
         raise TypeError("parameter REDIS_DBNAME must by integer or string")
     return env
+
+
+def CELERY_REDIS_BROKER_URI():
+    return os.getenv("CELERY_REDIS_BROKER_URI", "redis://localhost:6379")
+
+
+def BOT_TOKEN():
+    return os.getenv("BOT_TOKEN")
+

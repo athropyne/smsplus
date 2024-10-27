@@ -21,3 +21,10 @@ messages = Table(
     Column("text", String, nullable=False),
     Column("created_at", DateTime, nullable=False, default=datetime.datetime.now())
 )
+
+tg = Table(
+    "telegram IDs",
+    metadata,
+    Column("id", ForeignKey(users.c.id, onupdate="CASCADE", ondelete="CASCADE"), nullable=False, unique=True),
+    Column("tg_id", Integer, nullable=False, unique=True)
+)

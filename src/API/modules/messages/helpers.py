@@ -17,7 +17,7 @@ class Helper:
         user_login = await self.user_cache.get(str(user_id))
         if user_login is None:
             user_login = await self.user_repository.get_login_by_id(user_id)
-            await self.user_cache.set(str(user_id), user_login)
+            await self.user_cache.set(str(user_id), user_login, ex=30*60) # 30 минут в кэше
             if user_login is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail=f"пользователя с ID {user_id} не существует")

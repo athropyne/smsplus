@@ -22,3 +22,6 @@ class Service:
 
         token = TokenManager.create({"sub": user["id"]})
         return {"access_token": token, "token_type": "bearer"}
+
+    async def bind_tg(self, user_id: int, tg_id: int):
+        return await self.repository.bind_tg(user_id, tg_id)
