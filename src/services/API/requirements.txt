@@ -1,0 +1,9 @@
+fastapi[standard]
+sqlalchemy
+psycopg[binary]
+pyjwt
+passlib[bcrypt]
+python-dotenv
+celery
+redis
+websockets

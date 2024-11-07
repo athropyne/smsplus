@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  app:
+    build: ./src/services/API/
+    command: python starter.py
+    ports:
+      - "8000:8000"
+    env_file:
+      - /src/services/API/.env
+    restart: always
+    depends_on:
+      - db
+      - redis
+  worker:
+    build: ./src/services/API
+    command: celery -A celery_app.worker worker --loglevel=info
+    env_file:
+      - /src/services/API/.env
+    depends_on:
+      - redis
+    restart: always
+
+
+  db:
+    image: postgres:latest
+    env_file:
+      - /src/services/API/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/pgdata
+      - ./pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+    restart: always
+    tty: true
+    stdin_open: true
+  redis:
+    image: redis:latest
+#    environment:
+#      - REDIS_PASSWORD=${REDIS_PASSWORD}
+#      - REDIS_USER=${REDIS_USER}
+#      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redisdata:/data
+    restart: always
+volumes:
+  pgdata:
+    driver: local
+
