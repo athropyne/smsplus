@@ -3,24 +3,7 @@ import {TokenSvelte} from "$lib/states/token.svelte";
 import {goto} from "$app/navigation";
 
 export class UserConnector {
-    async signUp(login, password, confirm) {
-        if (password !== confirm) return "пароли не совпадают"
-        let result = await fetch(`${API_URI}/users`, {
-            method: "POST",
-            body: JSON.stringify({
-                "login": login,
-                "password": password
-            }),
-            headers: {"Content-Type": "application/json"},
 
-        })
-        if (result.status == 201) {
-            await this.signIn(login, password)
-        } else {
-            let data = await result.json()
-            if ("detail" in data) return data["detail"]
-        }
-    }
 
     async signIn(login, password) {
         const params = new URLSearchParams()
