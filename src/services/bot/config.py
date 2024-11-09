@@ -10,7 +10,7 @@ def API_SERVER_URI():
 
 
 def BOT_TOKEN():
-    return os.getenv("BOT_TOKEN")
+    return os.getenv("BOT_TOKEN", "7540272705:AAHD47ouqvtaTTNJBJJvE0shbL4KTzb8vew")
 
 
 def MESSAGE_TRANSFER_REDIS_HOST() -> str:
@@ -21,11 +21,19 @@ def MESSAGE_TRANSFER_REDIS_PORT() -> int:
     try:
         return int(os.getenv("MESSAGE_TRANSFER_REDIS_PORT", 6379))
     except TypeError:
-        raise TypeError("parameter REDIS_PORT must by integer")
+        raise TypeError("parameter MESSAGE_TRANSFER_REDIS_PORT must by integer")
+
+
+def REDIS_DSN() -> str:
+    env = os.getenv("REDIS_DSN")
+    if env is not None:
+        return "redis://redis"
+    return "redis://localhost:6379"
 
 
 def MESSAGE_TRANSFER_REDIS_DBNAME():
-    env = os.getenv("MESSAGE_TRANSFER_REDIS_DBNAME", 0)
-    if not isinstance(env, int) and not isinstance(env, str):
-        raise TypeError("parameter REDIS_DBNAME must by integer or string")
-    return env
+    try:
+        env = int(os.getenv("MESSAGE_TRANSFER_REDIS_DBNAME", 0))
+        return env
+    except ValueError:
+        raise TypeError("parameter REDIS_DBNAME must by integer")

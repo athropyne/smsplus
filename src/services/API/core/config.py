@@ -35,7 +35,7 @@ def TOKEN_SECRET_KEY() -> str:
 
 
 def REDIS_DSN() -> str:
-    env = os.getenv("REDIS_SOCKET")
+    env = os.getenv("REDIS_DSN")
     if env is not None:
         return "redis://redis"
     return "redis://localhost:6379"

@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - /src/services/API/.env
+      - /src/services/API/.envdist
     restart: always
     depends_on:
       - db
@@ -16,7 +16,7 @@ services:
     build: ./src/services/API
     command: celery -A celery_app.worker worker --loglevel=info
     env_file:
-      - /src/services/API/.env
+      - /src/services/API/.envdist
     depends_on:
       - redis
     restart: always
@@ -25,7 +25,7 @@ services:
     build: ./src/services/bot
     command: python main.py
     env_file:
-      - /src/services/bot/.env
+      - /src/services/bot/.envdist
     depends_on:
       - redis
     restart: always
@@ -33,7 +33,7 @@ services:
   db:
     image: postgres:latest
     env_file:
-      - /src/services/API/.env
+      - /src/services/API/.envdist
     ports:
       - "5432:5432"
     volumes:
