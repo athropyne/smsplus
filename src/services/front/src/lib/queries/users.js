@@ -1,4 +1,6 @@
 import {API_URI} from "../../config.js";
+import {signIn} from "$lib/queries/security.js";
+import {goto} from "$app/navigation";
 
 // @ts-ignore
 export async function signUp(login, password, confirm) {
@@ -13,10 +15,25 @@ export async function signUp(login, password, confirm) {
 
     })
     if (result.status === 201) {
-        // await this.signIn(login, password)
+        await signIn(login, password)
         alert("вы зарегистрированы")
     } else {
         let data = await result.json()
         if ("detail" in data) return data["detail"]
     }
+}
+
+
+export const getList = async () => {
+    let result = await fetch(`${API_URI}/users`, {
+        headers: {"Authorization": `Bearer ${localStorage.getItem("access_token")}`}
+    })
+    if (result.status === 401) {
+        localStorage.removeItem("access_token")
+        await goto("/signin")
+    } else if (!result.ok) {
+        let data = await result.json()
+        alert(data["detail"])
+    }
+    return await result.json()
 }

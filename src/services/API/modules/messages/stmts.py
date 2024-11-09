@@ -12,8 +12,8 @@ class Statement:
 
     def get_history(self, self_id: int, interlocutor_id: int):
         return select(messages).where(
-            or_(and_(messages.c.sender == self_id,
+            or_(and_(messages.c.signal == self_id,
                      messages.c.receiver == interlocutor_id),
-                and_(messages.c.sender == interlocutor_id,
+                and_(messages.c.signal == interlocutor_id,
                      messages.c.receiver == self_id))
         ).order_by(messages.c.created_at)

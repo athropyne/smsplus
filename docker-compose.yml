@@ -21,6 +21,14 @@ services:
       - redis
     restart: always
 
+  bot:
+    build: ./src/services/bot
+    command: python main.py
+    env_file:
+      - /src/services/bot/.env
+    depends_on:
+      - redis
+    restart: always
 
   db:
     image: postgres:latest

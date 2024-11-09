@@ -9,6 +9,6 @@ celery = Celery(__name__, broker=config.CELERY_REDIS_BROKER_DSN(), backend=confi
 
 
 @celery.task
-def notify(tg_id: int, message: str):
+def notify(message: str):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(message_transfer.connection.publish("message", message))

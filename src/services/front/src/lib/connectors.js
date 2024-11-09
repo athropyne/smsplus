@@ -43,17 +43,4 @@ export class UserConnector {
     }
 }
 
-export class MessageConnector {
-    async getHistory(interlocutor_id) {
-        let result = await fetch(`${API_URI}/messages/?interlocutor_id=${interlocutor_id}`, {
-            headers: {"Authorization": `Bearer ${TokenSvelte.value}`}
-        })
-        if (result.status === 401) await goto("/signin")
-        else if (!result.ok) {
-            let data = await result.json()
-            console.log(data)
-            alert(data["detail"])
-        }
-        return await result.json()
-    }
-}
+// export class MessageConnector {

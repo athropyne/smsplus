@@ -1,16 +1,17 @@
-import {EVENTS_CHANNEL_URL} from "../../config.js";
-import State from "$lib/states/token.svelte.js";
+import {goto} from "$app/navigation";
 
 let messageStore = $state("")
 
+// @ts-ignore
 export const connect = async (url) => {
     const ws = new WebSocket(url)
     ws.addEventListener("open", (event) => {
         alert("connected")
     })
 
-    ws.addEventListener("close", (event) => {
+    ws.addEventListener("close", async (event) => {
         alert("disconnected")
+        await goto("/signin")
     })
 
     ws.addEventListener("message", (event) => {
@@ -19,7 +20,7 @@ export const connect = async (url) => {
     return ws
 }
 
-
 export default {
     messageStore: messageStore
 }
+

@@ -1,9 +1,7 @@
 <script lang="ts">
     let value = $state('')
-    // const props = $props()
     const {oninput, placeholder, type, onclick} = $props()
 </script>
-<div>
     <input
             bind:value={value}
             oninput="{() => oninput(value)}"
@@ -11,16 +9,15 @@
             type="{type ? type : 'text'}"
             onclick={onclick}
     />
-</div>
 
 
 
 <style>
-    div{
-        width: 100%;
-        box-sizing: border-box;
-    }
     input{
-        width: -webkit-fill-available;
+        height: 2em;
+        box-sizing: border-box;
+        width: 100%;
+        font-size: 24px;
+        border-width: 0 0 1px 0;
     }
 </style>

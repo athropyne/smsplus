@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends
+from fastapi.params import Body
 from starlette.websockets import WebSocket
 
 from modules.messages.dto import MessageModel
@@ -10,6 +11,17 @@ from core.security import TokenManager
 
 router = APIRouter(prefix="/messages",
                    tags=["сообщения"])
+
+
+@router.post("/{receiver_id}",
+             description="отправляет сообщение")
+async def send(
+        receiver_id: int,
+        text: str = Body(..., max_length=300),
+        sender_id: int = Depends(TokenManager.decode),
+        service: Service = Depends(Service)):
+    return await service.send(sender_id, receiver_id, text)
+
 
 
 @router.get("/",
