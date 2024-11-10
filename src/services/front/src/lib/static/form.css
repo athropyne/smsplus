@@ -22,3 +22,28 @@
     text-align: center;
     margin: auto;
 }
+
+input {
+    height: 2em;
+    box-sizing: border-box;
+    width: 100%;
+    font-size: 24px;
+    border-width: 0 0 1px 0;
+}
+
+button {
+    height: 40px;
+    border-radius: 5px;
+    width: 100%;
+}
+
+p {
+    color: red;
+    margin: 5px;
+    text-align: center;
+    font-size: 12px;
+}
+
+p:before {
+    content: "[X] ";
+}

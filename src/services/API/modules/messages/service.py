@@ -146,7 +146,6 @@ class Service:
                         #     print(3)
                         #     await sender_socket.send_text(message_model.model_dump_json())
                     await asyncio.sleep(2)
-                    print("!!!")
                 except json.decoder.JSONDecodeError:
                     await socket.send_json({"signal": "Невалидные данные"})
                     continue

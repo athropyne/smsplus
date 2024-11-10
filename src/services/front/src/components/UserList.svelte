@@ -1,21 +1,22 @@
 <script>
     import {getList} from "$lib/queries/users.js";
+    import Store from "$lib/store.svelte.js"
 
     const {onselect} = $props()
-    let user_list = $state()
     let selected_user = $state()
     const select_user = (id) => {
-        selected_user = id
+        Store.SELECTED_USER = id
         onselect(id)
     }
 
     $effect(async () => {
-        user_list = await getList()
+        Store.USER_LIST = await getList()
     })
+    $inspect(Store.USER_LIST)
 </script>
 
 <ul>
-    {#each user_list as user (user.id)}
+    {#each Store.USER_LIST as user (user.id)}
         <li
                 onclick={() => select_user(user.id)}
                 class={selected_user === user.id ? "selected-user" : ""}

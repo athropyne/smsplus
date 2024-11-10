@@ -1,57 +1,45 @@
 <script>
-    import SignUpForm from "../../components/SignUpForm.svelte";
+    import "$lib/static/form.css"
+    import {signUp} from "./queries.js";
+
+    let login = $state()
+    let password = $state()
+    let confirm = $state()
+    let error_msg = $state()
+
+    async function submit() {
+        error_msg = password === confirm ? null : "Пароли не совпадают"
+        if (error_msg) return
+        error_msg = await signUp(login, password)
+    }
 </script>
-
-<!--<script lang="ts">-->
-<!--    import {signUp} from "./connectors";-->
-
-<!--    let login: string = $state("")-->
-<!--    let password: string = $state("")-->
-<!--    let confirm: string = $state("")-->
-<!--    let error_msg: string | null = $state(null)-->
-<!--    let submit = async () => {-->
-<!--        error_msg = await signUp(login, password, confirm)-->
-<!--    }-->
-<!--    let error_reset = () => {-->
-<!--        error_msg = null-->
-<!--    }-->
-<!--</script>-->
-<!--<main>-->
-<!--    <div id="form">-->
-<!--        <header class="errors">-->
-<!--            {#if error_msg !== null}-->
-<!--                {error_msg}-->
-<!--            {/if}-->
-<!--        </header>-->
-<!--        <div class="input-wrapper">-->
-<!--            <input-->
-<!--                    on:click={error_reset}-->
-<!--                    bind:value={login}-->
-<!--                    type="text"-->
-<!--                    placeholder="логин"-->
-<!--                    maxlength="30">-->
-<!--        </div>-->
-<!--        <div>-->
-<!--            <input-->
-<!--                    on:click={error_reset}-->
-<!--                    bind:value={password}-->
-<!--                    type="password"-->
-<!--                    placeholder="пароль"-->
-<!--                    maxlength="100">-->
-<!--        </div>-->
-<!--        <div>-->
-<!--            <input-->
-<!--                    on:click={error_reset}-->
-<!--                    bind:value={confirm}-->
-<!--                    type="password"-->
-<!--                    placeholder="пароль"-->
-<!--                    maxlength="100">-->
-<!--        </div>-->
-<!--        <div class="submit-wrapper">-->
-<!--            <button on:click={submit}>Регистрация</button>-->
-<!--            <a href="/signin">войти</a>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</main>-->
-
-<SignUpForm/>
+<main class="form">
+    <div class="error-sector">
+        {#if (error_msg)}
+            <p>{error_msg}</p>
+        {/if}
+    </div>
+    <input
+            bind:value={login}
+            placeholder="логин"
+            onclick={onclick}
+    />
+    <input
+            bind:value={password}
+            placeholder="пароль"
+            type="password"
+            onclick={onclick}
+    />
+    <input
+            bind:value={confirm}
+            placeholder="пароль"
+            type="password"
+            onclick={onclick}
+    />
+    <section>
+        <div class="form-button">
+            <button onclick={submit}>Зарегистрироваться</button>
+        </div>
+        <a href="/signin">Войти</a>
+    </section>
+</main>

@@ -3,7 +3,7 @@
     import ErrorSector from "./UI/ErrorSector.svelte";
     import TextField from "./UI/TextField.svelte";
     import FormButton from "./UI/FormButton.svelte";
-    import "./form.css"
+    import "$lib/static/form.css"
     import {signIn} from "$lib/queries/security.js";
 
     let login = $state()

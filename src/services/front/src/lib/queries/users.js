@@ -1,6 +1,7 @@
 import {API_URI} from "../../config.js";
 import {signIn} from "$lib/queries/security.js";
 import {goto} from "$app/navigation";
+import Store from "$lib/store.svelte.js"
 
 // @ts-ignore
 export async function signUp(login, password, confirm) {
@@ -35,5 +36,6 @@ export const getList = async () => {
         let data = await result.json()
         alert(data["detail"])
     }
-    return await result.json()
+    Store.USER_LIST = await result.json()
+    // return await result.json()
 }

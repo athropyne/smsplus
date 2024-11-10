@@ -14,9 +14,7 @@ export const connect = async (url) => {
         await goto("/signin")
     })
 
-    ws.addEventListener("message", (event) => {
-        messageStore = event.data
-    })
+
     return ws
 }
 
