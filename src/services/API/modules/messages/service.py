@@ -2,13 +2,14 @@ import asyncio
 import json
 
 import starlette
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, WebSocketException
 from pydantic import ValidationError
 from redis.asyncio import Redis
 from starlette import status
 from starlette.websockets import WebSocket
 
 from celery_app.worker import notify
+from core.security import TokenManager
 from core.storages import message_transfer, Online
 # from modules.messages import system_messages
 from modules.messages.dto import MessageModel, TelegramEventModel, SystemMessage
@@ -70,16 +71,30 @@ class Service:
         return await self.repository.get_history(self_id, interlocutor_id)
 
     async def exchange(self,
-                       user_id: int,
                        socket: WebSocket):
         """Принимает сокет-подключения и ид пользователя, сохраняя их в словарь онлайн пользователей.
         Осуществляет прием и отправку сообщений. (Все одной большой функцией для удобства отладки.)"""
         await socket.accept()
+        token = await socket.receive_text()
+        try:
+            user_id = TokenManager.decode(token)
+        except HTTPException:
+            raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR,
+                                     reason="доступ запрещен")
         Online.add(user_id, socket)
+        check_exists_receiver_socket = Online.get(user_id)
+        # if check_exists_receiver_socket is not None:
+        #     await check_exists_receiver_socket.close()
+        #     return
+        await socket.send_text("доступ разрешен")
+        socket_id = id(socket)
         p = message_transfer.connection.pubsub()
         await p.subscribe(f"message_to_{user_id}")
         try:
             while True:
+                if id(socket) != id(Online.get(user_id)):
+                    await socket.close()
+                    break
                 message_model = None
                 try:
                     # msg = await socket.receive_json()  # приняли сообщение
@@ -120,6 +135,7 @@ class Service:
                     msg = await p.get_message()
                     if msg:
                         print(msg)
+                        print(Online.users)
                         if not isinstance(msg["data"], int):
                             message_model = MessageModel.parse_raw(msg["data"].decode())
                             # if receiver_socket:
@@ -145,6 +161,7 @@ class Service:
                         # if sender_socket:
                         #     print(3)
                         #     await sender_socket.send_text(message_model.model_dump_json())
+                    print(socket_id)
                     await asyncio.sleep(2)
                 except json.decoder.JSONDecodeError:
                     await socket.send_json({"signal": "Невалидные данные"})
@@ -154,11 +171,15 @@ class Service:
                     continue
                 except starlette.websockets.WebSocketDisconnect:
                     Online.remove(user_id)
+                    if socket:
+                        await socket.close()
+                    await message_transfer.connection.close()
                     if message_model:
                         result = await self._send_to_telegram(message_model)
                     break
 
         finally:
+            # await Online.get(user_id).close()
             Online.remove(user_id)
 
 # class EventService:

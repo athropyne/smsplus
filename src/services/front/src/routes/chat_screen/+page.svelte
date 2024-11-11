@@ -1,23 +1,51 @@
 <script>
     import {EVENTS_CHANNEL_URL} from "../../config.js";
-    import {connect} from "./store.svelte.js";
+    // import {connect} from "./store.svelte.js";
     import {getMessageHistory, getUserList} from "./queries.js";
     import {sendMessage} from "$lib/queries/messages.js";
+    import {onDestroy, onMount} from "svelte";
 
     let ws = $state()
     let user_list = $state([])
     let selected_user = $state(null)
     let messages = $state([])
     let msg = $state(null)
+    $inspect(messages)
 
     // @ts-ignore
-    $effect(async () => {
-        ws = await connect(`${EVENTS_CHANNEL_URL}/${localStorage.getItem("access_token")}`)
-        ws.addEventListener("message", (event) => {
-            console.log(event.data)
+    // $effect(async () => {
+    //     ws = connect(`${EVENTS_CHANNEL_URL}`)
+    //     ws.addEventListener("message", (event) => {
+    //         console.log(event.data)
+    //         messages.push(event.data)
+    //     })
+    //     // user_list = await getUserList([])
+    //
+    // })
+    window.addEventListener("unload", function() {
+        alert("close")
+        ws = null
+    onMount(async () => {
+        // if (ws) ws.close()
+        let socket = new WebSocket(`${EVENTS_CHANNEL_URL}`)
+        socket.onopen = () => {
+            alert("connected")
+            socket.send(localStorage.getItem("access_token"))
+        }
+        socket.onmessage = (event) => {
             messages.push(event.data)
-        })
-        user_list = await getUserList([])
+        }
+        socket.onclose = (event) => {
+            alert("disconected")
+        }
+        ws = socket
+
+
+        });
+    })
+    onDestroy(() => {
+        if (ws) ws.close()
+        ws = null
     })
 
 </script>
