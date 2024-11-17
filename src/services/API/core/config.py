@@ -1,3 +1,4 @@
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -70,3 +71,20 @@ def CELERY_REDIS_BROKER_DSN():
     if env is not None:
         return f"{env}/{MESSAGE_TRANSFER_REDIS_DBNAME()}"
     return f"redis://localhost:6379/{MESSAGE_TRANSFER_REDIS_DBNAME()}"
+
+
+# logger = logging.Logger("logger")
+# logger.setLevel(logging.INFO)
+# handler = logging.Handler()
+# formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+# handler.setFormatter(formatter)
+# logger.addHandler(handler)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler('/app.log')
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(module)s - %(message)s'))
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)

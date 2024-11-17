@@ -5,10 +5,12 @@ import starlette
 from fastapi import Depends, HTTPException, WebSocketException
 from pydantic import ValidationError
 from redis.asyncio import Redis
+from redis.asyncio.client import PubSub
 from starlette import status
 from starlette.websockets import WebSocket
 
 from celery_app.worker import notify
+from core.config import logger
 from core.security import TokenManager
 from core.storages import message_transfer, Online
 # from modules.messages import system_messages
@@ -56,112 +58,89 @@ class Service:
         )
         if receiver_socket:
             await message_transfer.connection.publish(f"message_to_{receiver_id}", message_model.model_dump_json())
-            # await message_transfer.connection.publish(f"message_to_{sender_id}", message_model.model_dump_json())
             return await self.repository.create(message_model.model_dump())  # сохранили в базе
         else:
             return await self._send_to_telegram(message_model)
-            # asyncio.create_task(socket.send_text(output_model.model_dump_json()))  # отправляем себе
-            # asyncio.create_task(
-            #     socket.send_text(SENT_TO_TELEGRAM))  # отправляем системное себе
-            # asyncio.create_task(self.repository.create(
-            #     MessageModel(**model.model_dump(), signal=user_id).model_dump()))  # сохраняем в базу
+
 
     async def get_history(self, self_id: int, interlocutor_id: int):
         """Возвращает историю сообщений"""
         return await self.repository.get_history(self_id, interlocutor_id)
 
+    def __check_token(self, token) -> int:
+        try:
+            return TokenManager.decode(token)
+        except HTTPException:
+            raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR,
+                                     reason="доступ запрещен")
+
+    async def __send_signal_for_kill_old_loop(self, user_id: int):
+        """Посылает сигнал в старый цикл сообщений для его закрытия"""
+        try:
+            await message_transfer.connection.publish(f"signal_to_{user_id}",
+                                                      SystemMessage(signal="stop").model_dump_json())
+            logger.info("отправлен сигнал на закрытие старого цикла")
+
+    async def __wait_competed_signal(self, p: PubSub, user_id: int):
+        """Ждет пока придет сигнал о закрытии старого цикла"""
+        while True:
+            msg = await p.get_message()
+            if msg:
+                if not isinstance(msg["data"], int):
+                    message_model = SystemMessage.parse_raw(msg["data"].decode())
+                    if message_model.signal == "stopped":
+                        print("получили сигнал подтверждения выхода")
+                        break
+
+    async def __send_completed_signal(self, user_id):
+        """Отправляет сигнал о закрытии старого цикла"""
+        await message_transfer.connection.publish(f"signal_to_{user_id}", SystemMessage(
+            signal="stopped"
+        ).model_dump_json())
+
     async def exchange(self,
                        socket: WebSocket):
         """Принимает сокет-подключения и ид пользователя, сохраняя их в словарь онлайн пользователей.
         Осуществляет прием и отправку сообщений. (Все одной большой функцией для удобства отладки.)"""
-        await socket.accept()
-        token = await socket.receive_text()
-        try:
-            user_id = TokenManager.decode(token)
-        except HTTPException:
-            raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR,
-                                     reason="доступ запрещен")
-        Online.add(user_id, socket)
-        check_exists_receiver_socket = Online.get(user_id)
-        # if check_exists_receiver_socket is not None:
-        #     await check_exists_receiver_socket.close()
-        #     return
-        await socket.send_text("доступ разрешен")
-        socket_id = id(socket)
+        # token = await socket.receive_text()
+        # user_id = self.__check_token(token)
+
+        user_id = 1
         p = message_transfer.connection.pubsub()
-        await p.subscribe(f"message_to_{user_id}")
+        if user_id in Online.users:
+            await self.__send_signal_for_kill_old_loop(user_id)
+            await p.subscribe(f"signal_to_{user_id}")
+            await self.__wait_competed_signal(p, user_id)
+            await p.unsubscribe(f"signal_to_{user_id}")
+
+        await socket.accept()
+        Online.add(user_id, socket)
+        await socket.send_text(SystemMessage(signal="доступ разрешен").model_dump_json())
+        await p.subscribe(f"message_to_{user_id}", f"signal_to_{user_id}")
         try:
             while True:
-                if id(socket) != id(Online.get(user_id)):
-                    await socket.close()
-                    break
                 message_model = None
                 try:
-                    # msg = await socket.receive_json()  # приняли сообщение
-                    # print(msg)
-                    # model = CreateModel(**msg)  # скрутили в класс модели, заодно отвалидировали
-                    # receiver_socket = Online.get(
-                    #     model.receiver)  # получили сокет получателя если он онлайн по ID из сообщения или None
-                    # if receiver_socket is not None:  # если сокет есть
-                    #     output_model = MessageModel(**model.model_dump(),
-                    #                                 signal=user_id)  # скрутили в модель для отправки на сокет
-                    #
-                    #     asyncio.create_task(
-                    #         receiver_socket.send_text(output_model.model_dump_json())),  # отправили чувачку
-                    #     asyncio.create_task(socket.send_text(output_model.model_dump_json())),  # отправили себе
-                    #     asyncio.create_task(self.repository.create(output_model.model_dump()))  # сохранили в базе
-                    # else:  # если чувачок оффлайн
-                    #     tg_ids = await self.helper.get_tg_id(model.receiver)  # пытаемся найти привязанные TelegramID
-                    #     tg_ids = list(tg_ids)  # кучкуем результат в список
-                    #     if len(tg_ids) == 0:  # если привязанной телеги нет
-                    #         asyncio.create_task(socket.send_text(
-                    #             system_messages.USER_NOT_AVAILABLE))  # отправляем себе системное сообщение о том что чувачок не найден нигде (может он даже не существует)
-                    #
-                    #     for tg_id in tg_ids:  # если TelegramID найдены 1 или больше (можно привязать несколько)
-                    #         sender_login = await self.helper.convert_to_login(
-                    #             user_id)  # конвертируем ID отправителя в логин
-                    #         output_model = TelegramEventModel(**model.model_dump(),
-                    #                                           signal=sender_login)  # скручиваем в модель для отправки в телегу
-                    #         output_model.receiver = tg_id  # меняем ID чувачка на его TelegramID
-                    #         result = notify.delay(output_model.model_dump_json())  # запускаем задачу на отправку
-                    #         asyncio.create_task(socket.send_text(output_model.model_dump_json()))  # отправляем себе
-                    #     asyncio.create_task(
-                    #         socket.send_text(SENT_TO_TELEGRAM))  # отправляем системное себе
-                    #     asyncio.create_task(self.repository.create(
-                    #         MessageModel(**model.model_dump(), signal=user_id).model_dump()))  # сохраняем в базу
-                    #
-
                     receiver_socket = Online.get(user_id)
                     msg = await p.get_message()
+                    print(Online.users)
                     if msg:
                         print(msg)
-                        print(Online.users)
                         if not isinstance(msg["data"], int):
+                            if msg["channel"].decode() == f"signal_to_{user_id}":
+                                message_model = SystemMessage.parse_raw(msg["data"].decode())
+                                if message_model.signal == "stop":
+                                    await socket.close()
+                                    Online.remove(user_id)
+                                    await self.__send_completed_signal(user_id)
+                                    await p.unsubscribe(f"message_to_{user_id}", f"signal_to_{user_id}")
+                                    break
                             message_model = MessageModel.parse_raw(msg["data"].decode())
-                            # if receiver_socket:
+
+                            print(f"message_model {message_model}")
                             await receiver_socket.send_text(message_model.model_dump_json())
                             continue
-                            # else:
-
-                            # sender_socket = Online.get(message_model.sender)
-                            # if user_id == message_model.receiver:
-                            #     await receiver_socket.send_text(message_model.model_dump_json())
-                            # if user_id == message_model.sender:
-                            #     await sender_socket.send_text(message_model.model_dump_json())
-                        #     if receiver_socket:
-                        #         print(1)
-                        #         await receiver_socket.send_text(message_model.model_dump_json())
-                        #     else:
-                        #         print(2)
-                        #         await self._send_to_telegram(message_model)
-                        #         # if sender_socket:
-                        #         #     await sender_socket.send_text(message_model.model_dump_json())
-                        #         #     await sender_socket.send_text(
-                        #         #         SystemMessage(signal="сообщение отправлено в телеграм").model_dump_json())
-                        # if sender_socket:
-                        #     print(3)
-                        #     await sender_socket.send_text(message_model.model_dump_json())
-                    print(socket_id)
+                    await receiver_socket.send_text(SystemMessage(signal="ping").model_dump_json())
                     await asyncio.sleep(2)
                 except json.decoder.JSONDecodeError:
                     await socket.send_json({"signal": "Невалидные данные"})
@@ -171,16 +150,16 @@ class Service:
                     continue
                 except starlette.websockets.WebSocketDisconnect:
                     Online.remove(user_id)
-                    if socket:
-                        await socket.close()
                     await message_transfer.connection.close()
                     if message_model:
                         result = await self._send_to_telegram(message_model)
                     break
-
+            print("пока еще в цикле")
         finally:
-            # await Online.get(user_id).close()
-            Online.remove(user_id)
+
+            print("выходим")
+            print(f"в онлайне остались {Online.users}")
+        print("ушел")
 
 # class EventService:
 #

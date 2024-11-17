@@ -1,0 +1,5 @@
+websockets
+aiohttp
+python-dotenv
+pydantic
+redis
