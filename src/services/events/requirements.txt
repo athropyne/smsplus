@@ -3,3 +3,4 @@ aiohttp
 python-dotenv
 pydantic
 redis
+aio-pika
