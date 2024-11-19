@@ -6,11 +6,9 @@ import redis
 import websockets.exceptions
 from pydantic import BaseModel
 from redis.asyncio.client import PubSub
-from websockets import WebSocketException
 from websockets.asyncio.server import serve, ServerConnection
 
 import config
-from core import storage
 from core.storage import RedisStorage
 
 messages_transfer = RedisStorage(config.MESSAGES_STORAGE_DSN, config.MESSAGES_STORAGE_DB_NAME)
@@ -86,7 +84,6 @@ async def handler(socket: ServerConnection):
     finally:
         if user_id in online:
             del online[user_id]
-
 
 
 async def main():

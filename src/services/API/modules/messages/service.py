@@ -1,6 +1,7 @@
 import asyncio
 import json
 
+import redis.exceptions
 import starlette
 from fastapi import Depends, HTTPException, WebSocketException
 from pydantic import ValidationError
@@ -80,6 +81,8 @@ class Service:
             await message_transfer.connection.publish(f"signal_to_{user_id}",
                                                       SystemMessage(signal="stop").model_dump_json())
             logger.info("отправлен сигнал на закрытие старого цикла")
+        except redis.exceptions.ConnectionError:
+            raise e
 
     async def __wait_competed_signal(self, p: PubSub, user_id: int):
         """Ждет пока придет сигнал о закрытии старого цикла"""
