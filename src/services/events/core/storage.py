@@ -1,5 +1,8 @@
+from typing import Dict
+
 import redis
 from redis.asyncio import Redis
+from websockets.asyncio.server import ServerConnection
 
 
 class RedisStorage:
@@ -21,3 +24,25 @@ class RedisStorage:
 
     async def __call__(self):
         return self
+
+
+class Online:
+    _connections: Dict[int, ServerConnection] = {}
+
+    @classmethod
+    def __setitem__(cls, key, value):
+        cls._connections[key] = value
+
+    @classmethod
+    def __getitem__(cls, item):
+        cls._connections.get(item)
+
+    @classmethod
+    def __delitem__(cls, key):
+        if key in cls._connections:
+            del cls._connections
+
+    @classmethod
+    def __contains__(cls, item):
+        return item in cls._connections
+

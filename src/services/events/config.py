@@ -11,3 +11,6 @@ SERVER_PORT = os.getenv("SERVER_PORT", 8001)
 MESSAGES_STORAGE_DSN = os.getenv("MESSAGES_STORAGE_DSN", "redis://localhost:6379")
 MESSAGES_STORAGE_DB_NAME = os.getenv("MESSAGES_STORAGE_DB_NAME", 1)
 
+
+SECURITY_SERVER_DSN = os.getenv("SECURITY_SERVER_DSN", "http://lovslhost:8000")
+
