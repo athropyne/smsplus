@@ -81,7 +81,7 @@ class Service:
             await message_transfer.connection.publish(f"signal_to_{user_id}",
                                                       SystemMessage(signal="stop").model_dump_json())
             logger.info("отправлен сигнал на закрытие старого цикла")
-        except redis.exceptions.ConnectionError:
+        except redis.exceptions.ConnectionError as e:
             raise e
 
     async def __wait_competed_signal(self, p: PubSub, user_id: int):
