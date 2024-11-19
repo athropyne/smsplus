@@ -63,7 +63,6 @@ class Service:
         else:
             return await self._send_to_telegram(message_model)
 
-
     async def get_history(self, self_id: int, interlocutor_id: int):
         """Возвращает историю сообщений"""
         return await self.repository.get_history(self_id, interlocutor_id)
