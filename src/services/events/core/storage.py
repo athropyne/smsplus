@@ -52,4 +52,5 @@ class Online:
     def __len__(self):
         return len(self._connections)
 
-online = Online()
+
+online = {}
