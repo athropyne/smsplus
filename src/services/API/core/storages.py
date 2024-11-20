@@ -68,3 +68,4 @@ class Online:
 
 users_cache = RedisStorage(config.REDIS_DSN(), config.USERS_CACHE_REDIS_DBNAME())
 message_transfer = RedisStorage(config.REDIS_DSN(), config.MESSAGE_TRANSFER_REDIS_DBNAME())
+online_user_storage = RedisStorage(config.ONLINE_USERS_STORAGE_DSN, config.ONLINE_USERS_STORAGE_DB_NAME)

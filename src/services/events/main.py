@@ -2,88 +2,73 @@
 
 import asyncio
 
-import aiohttp
 import redis
 import websockets.exceptions
-from pydantic import BaseModel
 from redis.asyncio.client import PubSub
 from websockets.asyncio.server import serve, ServerConnection
 
 import config
-from core.storage import RedisStorage, Online
+from core.storage import online, messages_transfer, online_user_storage
+from dto import SystemMessage
+from service import Service
 
-messages_transfer = RedisStorage(config.MESSAGES_STORAGE_DSN, config.MESSAGES_STORAGE_DB_NAME)
-
-
-class TokenManager(BaseModel):
-    pass
-
-
-async def check_token(token) -> int:
-    try:
-        async with aiohttp.client.ClientSession as session:
-            async with session.post(f"{config.SECURITY_SERVER_DSN}/security/check_token",
-                                    data=token) as response:
-                user_id = await response.text()
-        return int(user_id)
-
-    except websockets.exceptions.WebSocketException:
-        raise websockets.exceptions.SecurityError()
-
-
-# online = {}
+service = Service()
 
 
 async def handler(socket: ServerConnection):
+    await socket.send(SystemMessage(signal="Подключено").model_dump_json())
     token = await socket.recv(decode=True)
-    user_id = check_token(token)
+    print(token)
+    try:
+        user_id = await service.check_token(token)
+        async with online_user_storage as connection:
+            await connection.set(user_id, str(socket.id))
+        await socket.send(SystemMessage(signal="распозан").model_dump_json())
 
+    except websockets.exceptions.SecurityError:
+        await socket.send(SystemMessage(signal="неизвестный пользователь").model_dump_json())
+        await socket.close(code=1011, reason="NOT AUTHORIZED")
+        return
+    print(user_id)
     try:
         async with messages_transfer as connection:
             p: PubSub = connection.pubsub()
-            if user_id in Online:
-                await p.subscribe("system")
-                await connection.publish("system", "stop")
-                while True:
-                    message = await p.get_message()
-                    if message:
-                        if not isinstance(message["data"], int):
-                            if message["data"].decode() == "stopped":
-                                await p.unsubscribe("system")
-                                break
+            if user_id in online:
+                await service.crash_old_loop(connection, p)
 
-            Online[user_id] = socket.id
-            await p.subscribe("message", "system")
-            socket_id = socket.id
+            online[user_id] = socket.id
+            await p.subscribe(f"message_to_{user_id}", "system")
             while True:
                 message = await p.get_message()
                 if message:
                     if not isinstance(message["data"], int):
-                        print(f"main loop {message}")
-
                         if message["channel"].decode() == "system":
                             if message["data"].decode() == "stop":
                                 await socket.close()
-                                await p.unsubscribe("message", "system")
-                                del Online[user_id]
+                                async with online_user_storage as ous:
+                                    await ous.delete(user_id)
+                                await p.unsubscribe(f"message_to_{user_id}", "system")
+                                del online[user_id]
                                 await connection.publish("system", "stopped")
                                 break
                         await socket.send(message["data"].decode(), text=True)
                 await socket.ping()
-                print(socket_id)
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.5)
     except redis.exceptions.ConnectionError:
         await socket.send("redis отвалился", text=True)
     except websockets.exceptions.ConnectionClosed:
         print(f"{socket.id} отключился")
     finally:
-        if user_id in Online:
-            del Online[user_id]
+        async with online_user_storage as ous:
+            await ous.delete(user_id)
+        if user_id in online:
+            del online[user_id]
 
 
 async def main():
     async with serve(handler, config.SERVER_HOST, config.SERVER_PORT):
-        await asyncio.get_running_loop().create_future()  # run forever
+        print(f"server running ws://{config.SERVER_HOST}:{config.SERVER_PORT}")
+        await asyncio.get_running_loop().create_future()
 
 
 if __name__ == "__main__":

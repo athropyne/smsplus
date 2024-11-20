@@ -13,7 +13,7 @@ from starlette.websockets import WebSocket
 from celery_app.worker import notify
 from core.config import logger
 from core.security import TokenManager
-from core.storages import message_transfer, Online
+from core.storages import message_transfer, Online, online_user_storage
 # from modules.messages import system_messages
 from modules.messages.dto import MessageModel, TelegramEventModel, SystemMessage
 from modules.messages.helpers import Helper
@@ -51,7 +51,8 @@ class Service:
             return await self.repository.create(message_model.model_dump())  # сохранили в базе
 
     async def send(self, sender_id: int, receiver_id: int, text: str):
-        receiver_socket = Online.get(receiver_id)
+        async with online_user_storage as connection:
+            receiver_socket = await connection.get(receiver_id)
         message_model = MessageModel(
             sender=sender_id,
             receiver=receiver_id,

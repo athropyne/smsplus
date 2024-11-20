@@ -73,6 +73,9 @@ def CELERY_REDIS_BROKER_DSN():
     return f"redis://localhost:6379/{MESSAGE_TRANSFER_REDIS_DBNAME()}"
 
 
+ONLINE_USERS_STORAGE_DSN = os.getenv("ONLINE_USERS_STORAGE_DSN", "redis://localhost:6379")
+ONLINE_USERS_STORAGE_DB_NAME = os.getenv("ONLINE_USERS_STORAGE_DB_NAME", 2)
+
 # logger = logging.Logger("logger")
 # logger.setLevel(logging.INFO)
 # handler = logging.Handler()

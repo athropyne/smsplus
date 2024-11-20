@@ -28,7 +28,7 @@ async def refresh(
 
 @router.post("/check")
 async def check(
-        token: str
+        token: str = Body(...)
 ) -> int:
     user_id = TokenManager.decode(token)
     return user_id
