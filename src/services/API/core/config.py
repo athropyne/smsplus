@@ -3,7 +3,11 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv()
+
+def is_dev(dev=False):
+    print(f"{dev=}")
+    if not dev:
+        load_dotenv()
 
 
 def PG_DSN() -> str:

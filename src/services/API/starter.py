@@ -1,10 +1,13 @@
 import asyncio
 import pathlib
+import sys
+
 import fastapi_cli.cli
 
-if __name__ == '__main__':
+from core import config
 
-    ### раскомментировать на винде
+if __name__ == '__main__':
+    config.is_dev(True if "dev" in sys.argv else False)
     import platform
     if platform.system() == "Windows":
         from asyncio import WindowsSelectorEventLoopPolicy

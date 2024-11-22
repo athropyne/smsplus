@@ -1,5 +1,5 @@
 <script>
-    import {EVENTS_CHANNEL_URL} from "../../config.js";
+    import {API_URI, EVENTS_CHANNEL_URL} from "../../config.js";
     // import {connect} from "./store.svelte.js";
     import {getMessageHistory, getUserList} from "./queries.js";
     import {sendMessage} from "$lib/queries/messages.js";
@@ -22,9 +22,7 @@
     //     // user_list = await getUserList([])
     //
     // })
-    window.addEventListener("unload", function() {
-        alert("close")
-        ws = null
+
     onMount(async () => {
         // if (ws) ws.close()
         let socket = new WebSocket(`${EVENTS_CHANNEL_URL}`)
@@ -39,15 +37,15 @@
             alert("disconected")
         }
         ws = socket
-
-
-        });
-    })
-    onDestroy(() => {
-        if (ws) ws.close()
-        ws = null
-    })
-
+        let result = await fetch(`${API_URI}/users/`, {
+            headers: {"Authorization": `Bearer ${localStorage.getItem("access_token")}`}
+            }
+        )
+        if (result.ok){
+            user_list = await result.json()
+        }
+    });
+    $inspect(selected_user)
 </script>
 
 <main>
@@ -83,7 +81,7 @@
         <button
                 onclick={
                     async () => {
-                        let last_message = await sendMessage(selected_user)
+                        let last_message = await sendMessage(selected_user, msg)
                         if(last_message) messages.push(last_message)
                     }
                 }

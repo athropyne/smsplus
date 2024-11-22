@@ -78,4 +78,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    config.is_dev(True if "dev" in sys.argv else False)
     asyncio.run(main())

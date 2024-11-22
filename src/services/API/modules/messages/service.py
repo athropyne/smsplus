@@ -53,6 +53,7 @@ class Service:
     async def send(self, sender_id: int, receiver_id: int, text: str):
         async with online_user_storage as connection:
             receiver_socket = await connection.get(receiver_id)
+            receiver_socket = await connection.get(receiver_id)
         message_model = MessageModel(
             sender=sender_id,
             receiver=receiver_id,
