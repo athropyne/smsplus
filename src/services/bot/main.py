@@ -34,7 +34,7 @@ def message_format(msg_model: dict) -> str:
 async def event_catcher():
     p = message_transfer.connection.pubsub()
     try:
-        await p.subscribe("message")
+        await p.subscribe("message_to_tg")
         while True:
             message = await p.get_message(ignore_subscribe_messages=True)
             if message is not None:

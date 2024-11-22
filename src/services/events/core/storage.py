@@ -4,7 +4,7 @@ import redis
 from redis.asyncio import Redis
 from websockets.asyncio.server import ServerConnection
 
-import config
+from core import config
 
 
 class __RedisStorage:
@@ -28,29 +28,29 @@ class __RedisStorage:
         return self
 
 
-messages_transfer = __RedisStorage(config.MESSAGES_TRANSFER_DSN, config.MESSAGES_TRANSFER_DB_NAME)
-online_user_storage = __RedisStorage(config.ONLINE_USERS_STORAGE_DSN, config.ONLINE_USERS_STORAGE_DB_NAME)
+messages_transfer = __RedisStorage(config.settings.MESSAGES_TRANSFER_DSN, config.settings.MESSAGES_TRANSFER_DB_NAME)
+online_user_storage = __RedisStorage(config.settings.ONLINE_USERS_STORAGE_DSN, config.settings.ONLINE_USERS_STORAGE_DB_NAME)
 
 
-class Online:
-    def __init__(self):
-        self._connections: Dict[int, ServerConnection] = {}
-
-    def __setitem__(self, key, value):
-        self._connections[key] = value
-
-    def __getitem__(self, item):
-        self._connections.get(item)
-
-    def __delitem__(self, key):
-        if key in self._connections:
-            del self._connections
-
-    def __contains__(self, item):
-        return item in self._connections
-
-    def __len__(self):
-        return len(self._connections)
+# class Online:
+#     def __init__(self):
+#         self._connections: Dict[int, ServerConnection] = {}
+#
+#     def __setitem__(self, key, value):
+#         self._connections[key] = value
+#
+#     def __getitem__(self, item):
+#         self._connections.get(item)
+#
+#     def __delitem__(self, key):
+#         if key in self._connections:
+#             del self._connections
+#
+#     def __contains__(self, item):
+#         return item in self._connections
+#
+#     def __len__(self):
+#         return len(self._connections)
 
 
 online = {}

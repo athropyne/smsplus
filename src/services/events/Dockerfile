@@ -1,6 +1,5 @@
 FROM python:3.12.7-slim
-WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-CMD ["celery", "-A", "celery_app.worker", "worker", "--loglevel=info"]
+CMD ["python3", "main.py"]

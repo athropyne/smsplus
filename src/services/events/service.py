@@ -1,10 +1,9 @@
 import aiohttp
-import websockets
 from redis.asyncio import Redis
 from redis.asyncio.client import PubSub
 from websockets.asyncio.server import ServerConnection
 
-import config
+from core import config
 from core.storage import online_user_storage, online
 from exc import SecurityServiceConnectionError, InvalidToken
 
@@ -13,10 +12,9 @@ class Service:
 
     @staticmethod
     async def check_token(token: str) -> int:
-        print(token)
         try:
             async with aiohttp.client.ClientSession() as session:
-                async with session.post(f"{config.SECURITY_SERVER_DSN}/security/check",
+                async with session.post(f"{config.settings.SECURITY_SERVER_DSN}/security/check",
                                         data=token) as response:
                     user_id = await response.text()
                     if response.status == 200:
@@ -50,6 +48,3 @@ class Service:
         async with online_user_storage as connection:
             await connection.set(user_id, socket_id)
 
-    @staticmethod
-    async def auth():
-        ...

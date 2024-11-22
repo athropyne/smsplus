@@ -25,10 +25,7 @@ def MESSAGE_TRANSFER_REDIS_PORT() -> int:
 
 
 def REDIS_DSN() -> str:
-    env = os.getenv("REDIS_DSN")
-    if env is not None:
-        return "redis://redis"
-    return "redis://localhost:6379"
+    return os.getenv("REDIS_DSN")
 
 
 def MESSAGE_TRANSFER_REDIS_DBNAME():

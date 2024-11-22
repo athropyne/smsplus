@@ -2,13 +2,16 @@
 
 import asyncio
 import json
+import platform
+import signal
+import sys
 
 import redis
 import websockets.exceptions
 from redis.asyncio.client import PubSub
 from websockets.asyncio.server import serve, ServerConnection
 
-import config
+from core import config
 from core.storage import online, messages_transfer, online_user_storage
 from dto import Event, EventTypes
 from exc import SecurityServiceConnectionError, InvalidToken
@@ -51,8 +54,6 @@ async def handler(socket: ServerConnection):
                         text=True)
                 await socket.ping()
                 await asyncio.sleep(0.5)
-                print(online)
-                print(socket.id)
     except redis.exceptions.ConnectionError as e:
         error = e
         await Rejects.RedisConnectionError(socket)
@@ -67,9 +68,13 @@ async def handler(socket: ServerConnection):
 
 
 async def main():
-    async with serve(handler, config.SERVER_HOST, config.SERVER_PORT):
-        print(f"server running ws://{config.SERVER_HOST}:{config.SERVER_PORT}")
-        await asyncio.get_running_loop().create_future()
+    loop = asyncio.get_running_loop()
+    stop = loop.create_future()
+    if platform.system() != "Windows":
+        loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+    async with serve(handler, config.settings.SERVER_HOST, config.settings.SERVER_PORT):
+        print(f"server running ws://{config.settings.SERVER_HOST}:{config.settings.SERVER_PORT}")
+        await stop
 
 
 if __name__ == "__main__":

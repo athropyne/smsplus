@@ -35,8 +35,8 @@ async def get_history(
     return await service.get_history(self_id, interlocutor_id)
 
 
-@router.websocket("/ws")
-async def exchange(
-        recipient_socket: WebSocket,
-        service: Service = Depends(Service)):
-    await service.exchange(recipient_socket)
+# @router.websocket("/ws")
+# async def exchange(
+#         recipient_socket: WebSocket,
+#         service: Service = Depends(Service)):
+#     await service.exchange(recipient_socket)
