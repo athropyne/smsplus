@@ -5,7 +5,9 @@ from celery import Celery
 from core import config
 from core.storages import message_transfer
 
-celery = Celery(__name__, broker=config.CELERY_REDIS_BROKER_DSN(), backend=config.CELERY_REDIS_BROKER_DSN())
+celery = Celery(__name__,
+                broker=config.settings.CELERY_REDIS_BROKER,
+                backend=config.settings.CELERY_REDIS_BROKER)
 
 
 @celery.task

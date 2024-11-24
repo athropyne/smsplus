@@ -11,7 +11,7 @@ from core import config
 
 class Database:
     def __init__(self):
-        self.engine = create_async_engine(config.PG_DSN(), echo=True)
+        self.engine = create_async_engine(config.settings.PG_DSN, echo=True)
 
     async def init(self, metadata: MetaData):
         async with self.engine.connect() as connection:
@@ -30,10 +30,9 @@ class Database:
 class RedisStorage:
 
     def __init__(self,
-                 dsn: str,
-                 db_name: int):
+                 dsn: str):
         self._pool: redis.asyncio.ConnectionPool = redis.asyncio.ConnectionPool.from_url(
-            f"{dsn}/{db_name}"
+            dsn
         )
         self.connection: Redis = Redis(connection_pool=self._pool, decode_responses=True)
 
@@ -67,6 +66,7 @@ class Online:
             return cls.users[recipient_id]
 
 
-users_cache = RedisStorage(config.REDIS_DSN(), config.USERS_CACHE_REDIS_DBNAME())
-message_transfer = RedisStorage(config.REDIS_DSN(), config.MESSAGE_TRANSFER_REDIS_DBNAME())
-online_user_storage = RedisStorage(config.ONLINE_USERS_STORAGE_DSN, config.ONLINE_USERS_STORAGE_DB_NAME)
+users_cache = RedisStorage(config.settings.USERS_CACHE_DSN)
+message_transfer = RedisStorage(config.settings.MESSAGE_TRANSFER_DSN)
+online_user_storage = RedisStorage(config.settings.ONLINE_USER_STORAGE_DSN)
+token_storage = RedisStorage(config.settings.TOKEN_STORAGE_DSN)

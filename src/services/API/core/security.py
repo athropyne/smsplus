@@ -1,5 +1,6 @@
 import datetime
 from datetime import timedelta, timezone
+from enum import Enum, auto
 
 import jwt
 import passlib.context
@@ -32,14 +33,23 @@ class PasswordManager:
         return cls._context.verify(plain, hashed_str)
 
 
+class TokenTypes(Enum):
+    ACCESS = auto()
+    REFRESH = auto()
+
+
 class TokenManager:
     _ALGORITHM = "HS256"
-    _TOKEN_SECRET_KEY = config.TOKEN_SECRET_KEY()
-    _ACCESS_TOKEN_EXPIRE_SECOND = config.ACCESS_TOKEN_EXPIRE_MINUTES()
+    _TOKEN_SECRET_KEY = config.settings.TOKEN_SECRET_KEY
+    ACCESS_TOKEN_EXPIRE_SECOND = config.settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    REFRESH_TOKEN_EXPIRE_HOURS = config.settings.REFRESH_TOKEN_EXPIRE_HOURS
 
     @classmethod
-    def create(cls, data: dict, expire_delta: timedelta) -> str:
+    def create(cls, data: dict, token_type: TokenTypes) -> str:
         to_encode = data.copy()
+        expire_delta = timedelta(
+            seconds=cls.ACCESS_TOKEN_EXPIRE_SECOND) if token_type is TokenTypes.ACCESS else timedelta(
+            hours=cls.REFRESH_TOKEN_EXPIRE_HOURS)
         expire = datetime.datetime.now(tz=timezone.utc) + expire_delta
         to_encode.update({"exp": expire})
         try:

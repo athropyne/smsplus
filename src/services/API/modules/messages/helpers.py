@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException
+from sqlalchemy import ScalarResult
 from starlette import status
 
 from core.storages import users_cache, RedisStorage
@@ -27,5 +28,5 @@ class Helper:
                                     detail=f"пользователя с ID {user_id} не существует")
         return user_login
 
-    async def get_tg_id(self, user_id: int):
+    async def get_tg_ids(self, user_id: int) -> ScalarResult:
         return await self.user_repository.get_tg_ids_by_user_id(user_id)
