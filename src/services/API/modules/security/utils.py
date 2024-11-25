@@ -15,8 +15,8 @@ def compare_passwords(plain: str, hashed: str):
         raise InvalidPassword
 
 
-async def add_access_token_to_storage(user_id:int, access_token: str):
+async def add_access_token_to_storage(access_token: str, user_id: int):
     async with token_storage as connection:
-        await connection.set(user_id,
-                             access_token,
+        await connection.set(access_token,
+                             user_id,
                              ex=TokenManager.ACCESS_TOKEN_EXPIRE_SECOND)

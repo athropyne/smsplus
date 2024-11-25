@@ -1,7 +1,7 @@
 fastapi[standard]
 sqlalchemy
 psycopg[binary]
-pyjwt
+pyjwt==2.9.0
 passlib[bcrypt]
 python-dotenv
 celery

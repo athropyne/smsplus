@@ -48,7 +48,7 @@ class TokenManager:
     def create(cls, data: dict, token_type: TokenTypes) -> str:
         to_encode = data.copy()
         expire_delta = timedelta(
-            seconds=cls.ACCESS_TOKEN_EXPIRE_SECOND) if token_type is TokenTypes.ACCESS else timedelta(
+            minutes=cls.ACCESS_TOKEN_EXPIRE_SECOND) if token_type is TokenTypes.ACCESS else timedelta(
             hours=cls.REFRESH_TOKEN_EXPIRE_HOURS)
         expire = datetime.datetime.now(tz=timezone.utc) + expire_delta
         to_encode.update({"exp": expire})
@@ -61,10 +61,13 @@ class TokenManager:
     @classmethod
     def decode(cls, token: str = Depends(auth_scheme)) -> int:
         try:
-            payload: dict = jwt.decode(token, cls._TOKEN_SECRET_KEY, cls._ALGORITHM)
+            payload: dict = jwt.decode(token, cls._TOKEN_SECRET_KEY, cls._ALGORITHM, options={"verify_sub": False})
             user_id = payload.get("sub")
             if user_id is None:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
             return int(user_id)
+        except jwt.exceptions.ExpiredSignatureError:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="токен просрочен")
         except jwt.InvalidTokenError as e:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)

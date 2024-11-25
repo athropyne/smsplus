@@ -20,6 +20,7 @@ async def send(
         text: str = Body(..., max_length=300),
         sender_id: int = Depends(TokenManager.decode),
         service: Service = Depends(Service)):
+    print(sender_id)
     return await service.send(sender_id, receiver_id, text)
 
 

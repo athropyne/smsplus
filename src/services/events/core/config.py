@@ -1,7 +1,9 @@
+import logging
 import os
 from dotenv import load_dotenv
 from pydantic import RedisDsn, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 def is_dev(dev=False):
     if not dev:
@@ -12,11 +14,16 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file_encoding="utf-8")
     SERVER_HOST: str = Field("localhost")
     SERVER_PORT: int = Field(8001)
-    MESSAGES_TRANSFER_DSN: RedisDsn = Field("redis://localhost:6379")
-    MESSAGES_TRANSFER_DB_NAME: int = Field(1)
-    ONLINE_USERS_STORAGE_DSN: RedisDsn = Field("redis://localhost:6379")
-    ONLINE_USERS_STORAGE_DB_NAME: int = Field(2)
-    SECURITY_SERVER_DSN: str = Field("http://localhost:8000")
+    MESSAGE_TRANSFER_DSN: str = "redis://localhost:6379/0"
+    ONLINE_USER_STORAGE_DSN: str = "redis://localhost:6379/2"
+    TOKEN_STORAGE_DSN: str = "redis://localhost:6379/3"
 
 
 settings = Settings()
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
+logger.addHandler(console_handler)

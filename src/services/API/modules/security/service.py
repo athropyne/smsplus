@@ -24,7 +24,7 @@ class Service:
         check_user(user)
         compare_passwords(password, user["password"])
         token_response_model: TokenResponseModel = self.helper.get_token_model(user["id"])
-        await add_access_token_to_storage(user["id"], token_response_model.access_token)
+        await add_access_token_to_storage(token_response_model.access_token, user["id"])
         return token_response_model
 
     async def refresh(self, refresh_token: str) -> TokenResponseModel:
@@ -32,5 +32,5 @@ class Service:
         TokenResponseModel"""
         user_id: int = TokenManager.decode(refresh_token)
         token_response_model = self.helper.get_token_model(user_id)
-        await add_access_token_to_storage(user_id, token_response_model.access_token)
+        await add_access_token_to_storage(token_response_model.access_token, user_id)
         return token_response_model

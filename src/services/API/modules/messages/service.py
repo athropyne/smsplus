@@ -19,7 +19,7 @@ from core.storages import message_transfer, Online, online_user_storage
 from modules.messages.dto import MessageModel, TelegramEventModel, SystemMessage
 from modules.messages.helpers import Helper
 from modules.messages.repository import Repository
-from modules.messages.utils import check_tg_ids, build_tg_event_model, is_online, is_online_user, build_message_model
+from modules.messages.utils import check_tg_ids, build_tg_event_model, is_online_user, build_message_model
 
 
 class Service:

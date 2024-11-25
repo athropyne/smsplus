@@ -1,14 +1,12 @@
-import logging
 from typing import Sequence
 
 from fastapi import Depends
 from sqlalchemy import RowMapping
 
-from modules.users.cache import Cache
+from core.security import PasswordManager
 from modules.users.dto import CreateModel
 from modules.users.helper import Helper
 from modules.users.repository import Repository
-from core.security import PasswordManager
 
 
 class Service:
