@@ -10,7 +10,6 @@
     let selected_user = $state(null)
     let messages = $state([])
     let msg = $state(null)
-    $inspect(messages)
 
     // @ts-ignore
     // $effect(async () => {
