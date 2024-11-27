@@ -13,7 +13,7 @@ def is_dev(dev=False):
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='../.env', env_file_encoding='utf-8')
     PG_DSN: str = f"postgresql+psycopg://postgres:postgres@localhost:5432/smsplus"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_HOURS: int = 24 * 15
     TOKEN_SECRET_KEY: str = "abracadabra"
     MESSAGE_TRANSFER_DSN: str = "redis://localhost:6379/0"

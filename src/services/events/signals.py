@@ -31,7 +31,7 @@ class Rejects:
     async def SecurityServiceConnectionError(socket: ServerConnection):
         await Signals.disconnected(socket)
         await socket.close(code=1011, reason="Security service is not available")
-        logger.debug(f"клиент {socket.id} отключен из за неверного недоступного сервиса аутентификации")
+        logger.debug(f"клиент {socket.id} отключен из за недоступного сервиса аутентификации")
 
     @staticmethod
     async def InvalidToken(socket: ServerConnection):

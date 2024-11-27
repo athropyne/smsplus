@@ -4,9 +4,11 @@
     import {getMessageHistory, getUserList} from "./queries.js";
     import {sendMessage} from "$lib/queries/messages.js";
     import {onDestroy, onMount} from "svelte";
+    import {Fisher, GetOptions} from "$lib/scripts/fisher.ts";
+    import {goto} from "$app/navigation";
 
     let ws = $state()
-    let user_list = $state([])
+    let user_list = $state([{"id": 1, "login": "люда"}, {"id": 2, "login": "вася"}, {"id": 3, "login": "петя"}])
     let selected_user = $state(null)
     let messages = $state([])
     let msg = $state(null)
@@ -23,34 +25,47 @@
     // })
 
     onMount(async () => {
-        // if (ws) ws.close()
+        if (ws) ws.close()
         let socket = new WebSocket(`${EVENTS_CHANNEL_URL}`)
         socket.onopen = () => {
             alert("connected")
+            console.log(localStorage.getItem("access_token"))
             socket.send(localStorage.getItem("access_token"))
         }
-        socket.onmessage = (event) => {
-            messages.push(event.data)
+        socket.onmessage = async (event) => {
+            let data = JSON.parse(event.data)
+            if (data.type === "signal") {
+                switch (data.data){
+                    case "disconnected" : await goto("/signin"); break;
+                    case "authorized": alert("Authorized"); break;
+                    default: alert(data.data)
+
+                }
+
+
+            }
+            else{
+                messages.push(event.data)
+            }
+
         }
         socket.onclose = (event) => {
             alert("disconected")
         }
         ws = socket
-        let result = await fetch(`${API_URI}/users/`, {
-            headers: {"Authorization": `Bearer ${localStorage.getItem("access_token")}`}
-            }
-        )
-        if (result.ok){
+        let result = await new Fisher().get(new GetOptions("/users"))
+        if (result.ok) {
             user_list = await result.json()
         }
     });
     $inspect(selected_user)
+    $inspect(user_list)
 </script>
 
 <main>
     <div class="user_list_wrapper">
         <ul>
-            {#each user_list as user (user.id)}
+            {#each user_list as user (user.id + 10)}
                 <li
                         class={user.id === selected_user ? "selected_class" : ""}
                         onclick={
@@ -59,7 +74,7 @@
                                 messages = await getMessageHistory(user.id)
                             }
                         }>
-                    {user.login}
+                    {user.id} {user.login}
                 </li>
             {/each}
         </ul>

@@ -19,4 +19,4 @@ async def add_access_token_to_storage(access_token: str, user_id: int):
     async with token_storage as connection:
         await connection.set(access_token,
                              user_id,
-                             ex=TokenManager.ACCESS_TOKEN_EXPIRE_SECOND)
+                             ex=TokenManager.ACCESS_TOKEN_EXPIRE_MINUTES*60)

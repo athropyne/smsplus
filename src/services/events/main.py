@@ -42,9 +42,11 @@ async def handler(socket: ServerConnection):
                 await start_crash_old_loop_process(connection, p)
                 await Signals.restart(socket)
             online[user_id] = socket.id
+            logger.debug(f"новый клиент {user_id}::{socket.id} сохранен")
             await p.subscribe(f"message_to_{user_id}", "system")
             while True:
                 message = await p.get_message()
+                logger.debug(f"получено сообщение {message}")
                 if message and not isinstance(message["data"], int):
                     if message["channel"].decode() == "system":
                         if message["data"].decode() == "stop":
@@ -55,14 +57,23 @@ async def handler(socket: ServerConnection):
                         text=True)
                 await socket.ping()
                 await asyncio.sleep(0.5)
+                logger.debug(online)
+                logger.debug(socket.id)
     except redis.exceptions.ConnectionError as e:
         error = e
         await Rejects.RedisConnectionError(socket)
     except websockets.exceptions.ConnectionClosed:
         print(f"{socket.id} disconnected")
     finally:
-        if user_id in online:
-            del online[user_id]
+        logger.debug("начата процедура выхода из обрабоччика")
+        logger.debug("ищем сохраненный сокет в списке online клиентов")
+        for uid, sid in online:
+            if socket.id == sid:
+                logger.debug("сокет найден")
+                del online[uid]
+                logger.debug(f"клиент {uid}::{sid} удален")
+                break
+
         if not isinstance(error, redis.exceptions.ConnectionError):
             async with online_user_storage as ous:
                 await ous.delete(user_id)
