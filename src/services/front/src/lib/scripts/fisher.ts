@@ -28,8 +28,6 @@ class BaseOptions {
         this.headers = headers
         this.json = json
     }
-
-
 }
 
 class Options extends BaseOptions {

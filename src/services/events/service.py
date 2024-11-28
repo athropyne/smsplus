@@ -22,33 +22,37 @@ async def check_token(token: str) -> int:
         raise SecurityServiceConnectionError
 
 
-async def start_crash_old_loop_process(connection: Redis, p: PubSub):
+async def start_crash_old_loop_process(connection: Redis, p: PubSub, user_id: int):
     logger.debug("начало процесса уничтожения старого цикла")
-    await p.subscribe("system")
+    await p.subscribe(f"system_to_{user_id}")
     logger.debug("подписались на системный канал")
-    await connection.publish("system", "stop")
+    await connection.publish(f"system_to_{user_id}", "stop")
     logger.debug("отправили сигнал stop в старый цикл")
     logger.debug("начинаем ждать ответный сигнал")
     while True:
+        logger.debug("ждем сигнал stopped")
         message = await p.get_message(ignore_subscribe_messages=True)
         if message:
             logger.debug(f"получено сообщение {message}")
             if not isinstance(message["data"], int):
                 if message["data"].decode() == "stopped":
                     logger.debug("получили подтверждение закрытия старого цикла")
-                    await p.unsubscribe("system")
+                    await p.unsubscribe(f"system_to_{user_id}")
                     break
 
 
 async def kill_old_loop_procedure(socket: ServerConnection, storage: Redis, pubsub: PubSub, user_id: int):
     logger.debug("старт процедуры уничтожения цикла")
     await socket.close()
+    await socket.wait_closed()
     logger.debug("старый сокет закрыт")
-    await pubsub.unsubscribe(f"message_to_{user_id}", "system")
-    # del online[user_id]
-    # logger.debug("клиент удален из онлайн списка")
-    await storage.publish("system", "stopped")
-    logger.debug("сигнал stopped отправлен в новое подключение")
+    try:
+        await pubsub.unsubscribe(f"message_to_{user_id}", f"system_to_{user_id}")
+        await storage.publish(f"system_to_{user_id}", "stopped")
+        logger.debug("сигнал stopped отправлен в новое подключение")
+    except redis.exceptions.ConnectionError:
+        logger.error("redis не доступен, сигнал в новое подключение не отправлен",
+                     stack_info=True)
 
 
 async def add_to_storage(user_id: int, socket_id: str):
