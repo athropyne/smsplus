@@ -5,23 +5,18 @@ import json
 import platform
 import signal
 import sys
-from asyncio import Task
-from typing import Dict, Tuple
 
-import redis
 import websockets.exceptions
 from redis.asyncio.client import PubSub
 from websockets.asyncio.server import serve, ServerConnection
 
 from core import config
 from core.config import logger
-from core.storage import messages_transfer, online_user_storage
+from core.storage import online_user_storage, online
 from dto import Event, EventTypes
 from exc import SecurityServiceConnectionError, InvalidToken
-from service import add_to_storage, check_token, start_crash_old_loop_process, kill_old_loop_procedure
+from service import add_to_storage, check_token
 from signals import Signals, Rejects
-
-online: Dict[int, Tuple[ServerConnection, Task]] = {}
 
 
 async def relay(socket: ServerConnection, user_id: int):
@@ -30,20 +25,13 @@ async def relay(socket: ServerConnection, user_id: int):
         await p.subscribe(f"message_to_{user_id}")
         while True:
             message = await p.get_message(ignore_subscribe_messages=True)
-            print(message)
             if message:
-                print(message)
-                await socket.send(
+                asyncio.create_task(socket.send(
                     Event(type=EventTypes.MESSAGE,
                           data=json.loads(message["data"]
                                           .decode()))
                     .model_dump_json(),
-                    text=True)
-            print(user_id)
-            print(online[user_id][0])
-            print(online[user_id][1])
-            print()
-            print(socket.id)
+                    text=True))
             await socket.ping()
             await asyncio.sleep(1)
 
@@ -53,6 +41,7 @@ async def handler(socket: ServerConnection):
     token = await socket.recv(decode=True)
     try:
         user_id = await check_token(token)
+        await Signals.authenticated(socket)
     except SecurityServiceConnectionError:
         await Rejects.SecurityServiceConnectionError(socket)
         return
@@ -63,7 +52,6 @@ async def handler(socket: ServerConnection):
     if user_id in online:
         online[user_id][1].cancel()
         await online[user_id][0].close()
-        await online[user_id][0].wait_closed()
     try:
         online[user_id] = (socket, asyncio.create_task(relay(socket, user_id)))
         await add_to_storage(user_id, str(socket.id))

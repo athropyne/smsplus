@@ -1,5 +1,6 @@
 import logging
-from typing import Dict
+from asyncio import Task
+from typing import Dict, Tuple
 
 import redis
 from redis.asyncio import Redis
@@ -30,4 +31,4 @@ messages_transfer = RedisStorage(config.settings.MESSAGE_TRANSFER_DSN)
 online_user_storage = RedisStorage(config.settings.ONLINE_USER_STORAGE_DSN)
 token_storage = RedisStorage(config.settings.TOKEN_STORAGE_DSN)
 
-online = {}
+online: Dict[int, Tuple[ServerConnection, Task]] = {}
