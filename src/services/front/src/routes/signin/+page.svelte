@@ -13,7 +13,7 @@
 <main class="form">
     <div class="error-sector">
         {#if (error_msg)}
-            <p>{error_msg}</p>
+            <p class="error_msg">{error_msg}</p>
         {/if}
     </div>
     <input

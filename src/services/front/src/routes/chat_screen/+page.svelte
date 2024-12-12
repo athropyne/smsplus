@@ -94,6 +94,7 @@
                     async () => {
                         let last_message = await sendMessage(selected_user, msg)
                         if(last_message) messages.push(last_message)
+                        msg = null
                     }
                 }
                 > >>>
